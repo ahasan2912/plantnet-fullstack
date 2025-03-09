@@ -1,8 +1,23 @@
-import { Helmet } from 'react-helmet-async'
-
-import PlantDataRow from '../../../components/Dashboard/TableRows/PlantDataRow'
-
+import { useQuery } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
+import PlantDataRow from '../../../components/Dashboard/TableRows/PlantDataRow';
+import LoadingSpinner from '../../../components/Shared/LoadingSpinner';
+import useAxiosSecure from '../../../hooks/useAxiosSecure';
+import useAuth from '../../../hooks/useAuth';
 const MyInventory = () => {
+  const axiosSecure = useAxiosSecure();
+  const { user } = useAuth();
+  const { data: plants = [], isLoading, refetch } = useQuery({
+    queryKey: ['plants'],
+    queryFn: async () => {
+      const { data } = await axiosSecure(`/plants/seller/${user?.email}`);
+      return data
+    }
+  })
+  // console.log(plants)
+  if (isLoading) {
+    return <LoadingSpinner></LoadingSpinner>
+  }
   return (
     <>
       <Helmet>
@@ -61,7 +76,13 @@ const MyInventory = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <PlantDataRow />
+                  {
+                    plants.map(plant => <PlantDataRow 
+                      key={plant?._id}
+                      refetch={refetch}
+                      plant={plant}
+                      ></PlantDataRow>)
+                  }
                 </tbody>
               </table>
             </div>

@@ -12,15 +12,10 @@ import SellerMenu from './Menu/SellerMenu'
 import CustomerMenu from './Menu/CustomerMenu'
 import logo from '../../../assets/images/logo-flat.png'
 import useRole from '../../../hooks/useRole'
-import LoadingSpinner from '../../Shared/LoadingSpinner'
 const Sidebar = () => {
   const { logOut } = useAuth()
   const [isActive, setActive] = useState(false)
-  const { loading } = useAuth();
-  const [role, isLoading] = useRole();
-  if (isLoading || loading) {
-    return <LoadingSpinner></LoadingSpinner>
-  }
+  const [role] = useRole();
 
   // Sidebar Responsive Handler
   const handleToggle = () => {

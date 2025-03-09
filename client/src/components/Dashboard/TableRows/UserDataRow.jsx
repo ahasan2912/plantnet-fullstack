@@ -1,21 +1,42 @@
-import { useState } from 'react'
-import UpdateUserModal from '../../Modal/UpdateUserModal'
 import PropTypes from 'prop-types'
-const UserDataRow = () => {
+import { useState } from 'react'
+import useAxiosSecure from '../../../hooks/useAxiosSecure'
+import UpdateUserModal from '../../Modal/UpdateUserModal'
+import toast from 'react-hot-toast'
+const UserDataRow = ({ userData, refetch }) => {
+  const axiosSecure = useAxiosSecure();
   const [isOpen, setIsOpen] = useState(false)
-
+  const { email, role, status } = userData || {};
+  // handle user role update
+  const updateRole = async (selectedRole) => {
+    if (role === selectedRole) return
+    try {
+     await axiosSecure.patch(`/user/role/${email}`, {role: selectedRole});
+     toast.success('Role updated successfully!')
+     refetch();
+    }
+    catch (err) {
+      toast.error(err.response?.data);
+    }
+    finally{
+      setIsOpen(false);
+    }
+  }
   return (
     <tr>
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
-        <p className='text-gray-900 whitespace-no-wrap'>abc@gmail.com</p>
+        <p className='text-gray-900 whitespace-no-wrap'>{email}</p>
       </td>
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
-        <p className='text-gray-900 whitespace-no-wrap'>Customer</p>
+        <p className='text-gray-900 whitespace-no-wrap'>{role}</p>
       </td>
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
-        <p className='text-red-500 whitespace-no-wrap'>Unavailable</p>
+        {
+          status ? <p className={`${status === 'Requested' ? 'text-yellow-500' : 'text-green-500'} whitespace-no-wrap`}>{status}</p> : <p className='text-red-500'>
+            Unavailable
+          </p>
+        }
       </td>
-
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
         <span
           onClick={() => setIsOpen(true)}
@@ -28,14 +49,18 @@ const UserDataRow = () => {
           <span className='relative'>Update Role</span>
         </span>
         {/* Modal */}
-        <UpdateUserModal isOpen={isOpen} setIsOpen={setIsOpen} />
+        <UpdateUserModal
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          role={role}
+          updateRole={updateRole} />
       </td>
     </tr>
   )
 }
 
 UserDataRow.propTypes = {
-  user: PropTypes.object,
+  userData: PropTypes.object,
   refetch: PropTypes.func,
 }
 

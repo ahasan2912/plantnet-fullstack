@@ -1,10 +1,30 @@
 import { useState } from 'react'
 import DeleteModal from '../../Modal/DeleteModal'
 import UpdatePlantModal from '../../Modal/UpdatePlantModal'
+import PropTypes from 'prop-types'
+import useAxiosSecure from '../../../hooks/useAxiosSecure'
+import toast from 'react-hot-toast'
 
-const PlantDataRow = () => {
+const PlantDataRow = ({ plant, refetch }) => {
+  const axiosSecure = useAxiosSecure();
+  // delete modal state
   let [isOpen, setIsOpen] = useState(false)
+  // update modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+
+  const { image, name, category, price, quantity, _id } = plant || {};
+  const handleDelete = async () => {
+    try {
+      await axiosSecure.delete(`/plants/${_id}`);
+      toast.success('Plant successfully Removed.')
+      refetch();
+    } catch (err) {
+      toast.error(err.response.data)
+    }
+    finally{
+      closeModal();
+    }
+  }
 
   function openModal() {
     setIsOpen(true)
@@ -21,7 +41,7 @@ const PlantDataRow = () => {
             <div className='block relative'>
               <img
                 alt='profile'
-                src='https://i.ibb.co.com/rMHmQP2/money-plant-in-feng-shui-brings-luck.jpg'
+                src={image}
                 className='mx-auto object-cover rounded h-10 w-15 '
               />
             </div>
@@ -29,16 +49,16 @@ const PlantDataRow = () => {
         </div>
       </td>
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
-        <p className='text-gray-900 whitespace-no-wrap'>Money Plant</p>
+        <p className='text-gray-900 whitespace-no-wrap'>{name}</p>
       </td>
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
-        <p className='text-gray-900 whitespace-no-wrap'>Indoor</p>
+        <p className='text-gray-900 whitespace-no-wrap'>{category}</p>
       </td>
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
-        <p className='text-gray-900 whitespace-no-wrap'>$120</p>
+        <p className='text-gray-900 whitespace-no-wrap'>${price}</p>
       </td>
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
-        <p className='text-gray-900 whitespace-no-wrap'>5</p>
+        <p className='text-gray-900 whitespace-no-wrap'>{quantity}</p>
       </td>
 
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
@@ -52,7 +72,8 @@ const PlantDataRow = () => {
           ></span>
           <span className='relative'>Delete</span>
         </span>
-        <DeleteModal isOpen={isOpen} closeModal={closeModal} />
+        {/* delete modal */}
+        <DeleteModal handleDelete={handleDelete} isOpen={isOpen} closeModal={closeModal} />
       </td>
       <td className='px-5 py-5 border-b border-gray-200 bg-white text-sm'>
         <span
@@ -73,5 +94,8 @@ const PlantDataRow = () => {
     </tr>
   )
 }
-
+PlantDataRow.propTypes = {
+  plant: PropTypes.object.isRequired,
+  refetch: PropTypes.func.isRequired,
+}
 export default PlantDataRow

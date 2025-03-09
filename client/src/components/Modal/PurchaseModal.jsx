@@ -6,21 +6,21 @@ import {
   Transition,
   TransitionChild,
 } from '@headlessui/react';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import PropTypes from 'prop-types';
 import { Fragment, useState } from 'react';
 import toast from 'react-hot-toast';
 import useAuth from '../../hooks/useAuth';
-import Button from '../Shared/Button/Button';
-import useAxiosSecure from '../../hooks/useAxiosSecure';
-import { useNavigate } from 'react-router-dom';
+import CheckoutForm from '../Form/CheckoutForm';
+// stripe public key
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
 
-const PurchaseModal = ({ closeModal, isOpen, plant, refetch}) => {
+const PurchaseModal = ({ closeModal, isOpen, plant, refetch }) => {
   const { category, price, name, quantity, seller, _id } = plant || {};
   const [totalQuantity, setTotalQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(price);
   const { user } = useAuth();
-  const axiosSecure = useAxiosSecure();
-  const navigate = useNavigate();
   const customer = {
     name: user?.displayName,
     email: user?.email,
@@ -48,13 +48,13 @@ const PurchaseModal = ({ closeModal, isOpen, plant, refetch}) => {
     setTotalQuantity(value);
     setTotalPrice(value * price)
     setPurchaseInfo(prv => {
-      return {...prv, quantity: value, price: value * price}
+      return { ...prv, quantity: value, price: value * price }
     })
   }
 
-  const handlePurchase = async() => {
+  /* const handlePurchase = async () => {
     // Save to server side
-    try{
+    try {
       await axiosSecure.post('/order', purchaseInfo);
       await axiosSecure.patch(`/plants/quantity/${_id}`, {
         qunatityToUpdate: totalQuantity,
@@ -64,13 +64,13 @@ const PurchaseModal = ({ closeModal, isOpen, plant, refetch}) => {
       refetch();
       navigate('/dashboard/my-orders')
     }
-    catch(err){
+    catch (err) {
       console.log(err)
     }
-    finally{
+    finally {
       closeModal();
     }
-  }
+  } */
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -147,16 +147,22 @@ const PurchaseModal = ({ closeModal, isOpen, plant, refetch}) => {
                     name='address'
                     id='address'
                     onChange={e => setPurchaseInfo(prv => {
-                      return {...prv, address: e.target.value}
+                      return { ...prv, address: e.target.value }
                     })}
                     type='text'
                     placeholder='Shpping address here...'
                     required
                   />
                 </div>
-                <div className='mt-3'>
-                  <Button onClick={handlePurchase} label={`Pay ${totalPrice}$`}></Button>
-                </div>
+                {/* Stripe Checkout From */}
+                <Elements stripe={stripePromise}>
+                  <CheckoutForm
+                    closeModal={closeModal}
+                    purchaseInfo={purchaseInfo}
+                    refetch={refetch}
+                    totalQuantity={totalQuantity}
+                  ></CheckoutForm>
+                </Elements>
               </DialogPanel>
             </TransitionChild>
           </div>
